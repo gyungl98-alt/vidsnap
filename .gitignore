@@ -22,5 +22,7 @@ uploads/
   .DS_Store
   Thumbs.db
 
-  
+  # ignore engtrainedata
+
+  eng.traineddata
 
