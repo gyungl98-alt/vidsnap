@@ -1,0 +1,26 @@
+#Node modules (dependencies)
+node_modules/
+
+# environment variables
+
+.env
+
+# User uploaded files
+
+uploads/
+
+# logs
+*.log
+
+# Temporary files
+ 
+ tmp/
+  .cache/
+
+  # system files
+
+  .DS_Store
+  Thumbs.db
+
+  
+

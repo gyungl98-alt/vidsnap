@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>VidSnap OCR</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="card">
+    <h2>VidSnap OCR</h2>
+
+    <input type="file" id="file" accept="image/*,video/*" />
+
+    <button onclick="upload()">Extract Text</button>
+
+    <div id="result" class="hidden">
+      <h3>OCR Result</h3>
+
+      <pre id="output"></pre>
+
+      <select id="format">
+        <option value="pdf">PDF</option>
+        <option value="docx">DOCX</option>
+        <option value="txt">TXT</option>
+        <option value="rtf">RTF</option>
+        <option value="xlsx">XLSX</option>
+        
+      </select>
+
+      <button onclick="downloadFile()">Download</button>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
