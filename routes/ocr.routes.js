@@ -113,7 +113,7 @@ router.get("/download/:filename", (req, res) => {
     const filename = req.params.filename;
     if (!filename) return res.status(400).send("Missing filename");
 
-    const filePath = path.join(__dirname, "..", "uploads", filename);
+   const filePath = path.join(__dirname, "..", "services", "uploads", filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ success: false, error: "File not found" });
 
     res.download(filePath);
@@ -124,5 +124,6 @@ router.get("/download/:filename", (req, res) => {
 });
 
 module.exports = router;
+
 
 

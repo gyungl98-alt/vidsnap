@@ -246,4 +246,35 @@ module.exports = async function convert(text, format) {
 };
 
 
+function ensureUploads() {
+  const dir = path.join(__dirname, "..", "uploads"); // root uploads
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+module.exports = async function convert(text, format) {
+  const dir = ensureUploads();
+  const timestamp = Date.now();
+  const ext = format.toLowerCase();
+  const filePath = path.join(dir, `result-${timestamp}.${ext}`);
+  // Build structured model
+  const struct = parseToBlocks(text);
+  // Route to exporter
+  if (ext === "txt") {
+    exportToTxt(struct, filePath);
+  } else if (ext === "pdf") {
+    exportToPdf(struct, filePath);
+  } else if (ext === "docx") {
+    await exportToDocx(struct, filePath);
+  } else if (ext === "rtf") {
+    exportToRtf(struct, filePath);
+  } else if (ext === "xlsx" || ext === "xls") {
+    await exportToXlsx(struct, filePath);
+  } else {
+    // fallback: plain text
+    fs.writeFileSync(filePath, text);
+  }
+  return filePath;
+};
+
 
