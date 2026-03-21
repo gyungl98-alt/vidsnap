@@ -1,25 +1,41 @@
-const express = require("express");
-const path = require("path");
-const multer = require("multer");
+// server.js
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
 
-const ocrRoutes = require("./routes/ocr.routes");
+const ocrRoutes = require('./routes/ocr.routes');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
-/* middleware */
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+/* Middleware */
+app.use(cors());
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+/* Static assets */
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-/* routes */
-app.use("/api/ocr", ocrRoutes);
+/* Routes */
+app.use('/api/ocr', ocrRoutes);
 
-/* start */
-app.listen(PORT, () => {
-  console.log("🚀 VidSnap running on http://localhost:" + PORT);
+/* Health check */
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+
+/* 404 handler */
+app.use((req, res) => {
+  res.status(404).json({ success: false, error: 'Not found' });
 });
 
+/* Error handler */
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err && err.stack ? err.stack : err);
+  res.status(500).json({ success: false, error: err.message || 'Internal server error' });
+});
+
+/* Start */
+app.listen(PORT, () => {
+  console.log(`🚀 VidSnap running on http://localhost:${PORT}`);
+});
 

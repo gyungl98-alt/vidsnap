@@ -4,27 +4,29 @@ body {
   display: flex;
   justify-content: center;
   padding-top: 60px;
-}
-body {
   overflow-y: auto;
+  margin: 0;
 }
 
 .card {
   background: #fff;
   padding: 25px;
-  width: 380px;
+  width: 420px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 h2 {
   text-align: center;
+  margin: 0 0 12px 0;
 }
 
 input, select, button {
   width: 100%;
   margin-top: 12px;
   padding: 10px;
+  box-sizing: border-box;
+  font-size: 14px;
 }
 
 button {
@@ -42,8 +44,12 @@ button:hover {
 pre {
   background: #f1f1f1;
   padding: 10px;
-  max-height: 150px;
+  max-height: 220px;
   overflow: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border-radius: 4px;
+  margin: 8px 0;
 }
 
 .hidden {
@@ -53,4 +59,19 @@ pre {
 #status {
   margin-top: 10px;
   text-align: center;
+  font-size: 14px;
+}
+
+#downloadLink {
+  display: inline-block;
+  padding: 10px 12px;
+  background: #28a745;
+  color: white;
+  border-radius: 4px;
+  text-decoration: none;
+  line-height: 1;
+}
+
+#downloadLink:hover {
+  background: #1e7e34;
 }

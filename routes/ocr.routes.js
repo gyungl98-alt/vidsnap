@@ -1,7 +1,10 @@
+
+// routes/ocr.routes.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 
 const imageOcr = require("../services/imageOcr");
 const videoOcr = require("../services/videoOcr");
@@ -16,51 +19,110 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-/* IMAGE OCR */
+/* helper to normalize OCR result */
+function normalizeOcrResult(ocrResult) {
+  // Accept either a string or an object { rawText, lines }
+  if (!ocrResult) return { rawText: "", lines: [] };
+  if (typeof ocrResult === "string") {
+    return { rawText: ocrResult, lines: ocrResult.split(/\r?\n/).map(l => l.trim()).filter(Boolean) };
+  }
+  // object case
+  const rawText = ocrResult.rawText || ocrResult.text || (ocrResult.lines ? ocrResult.lines.join("\n") : "");
+  const lines = ocrResult.lines || (rawText ? rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean) : []);
+  return { rawText, lines };
+}
+
+/* IMAGE OCR
+   - If client sends `format` in body (e.g., { format: "pdf" }), route will convert OCR output and return download link.
+*/
 router.post("/image", upload.single("file"), async (req, res) => {
   try {
-    const text = await imageOcr(req.file.path);
-    res.json({ success: true, text });
+    if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
+
+    const ocrRaw = await imageOcr(req.file.path);
+    const { rawText, lines } = normalizeOcrResult(ocrRaw);
+
+    // If client requested conversion immediately
+    const { format } = req.body || {};
+    if (format) {
+      const filePath = await convertFile(rawText, format);
+      return res.json({
+        success: true,
+        text: rawText,
+        download: "/api/ocr/download/" + path.basename(filePath)
+      });
+    }
+
+    res.json({ success: true, text: rawText, lines });
   } catch (err) {
     console.error(err);
-    res.json({ success: false });
+    res.status(500).json({ success: false, error: err.message || "OCR failed" });
   }
 });
 
-/* VIDEO OCR */
+/* VIDEO OCR
+   - Same behavior as image endpoint: returns text, or converts if `format` provided.
+*/
 router.post("/video", upload.single("file"), async (req, res) => {
   try {
-    const text = await videoOcr(req.file.path);
-    res.json({ success: true, text });
+    if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
+
+    const ocrRaw = await videoOcr(req.file.path);
+    const { rawText, lines } = normalizeOcrResult(ocrRaw);
+
+    const { format } = req.body || {};
+    if (format) {
+      const filePath = await convertFile(rawText, format);
+      return res.json({
+        success: true,
+        text: rawText,
+        download: "/api/ocr/download/" + path.basename(filePath)
+      });
+    }
+
+    res.json({ success: true, text: rawText, lines });
   } catch (err) {
     console.error(err);
-    res.json({ success: false });
+    res.status(500).json({ success: false, error: err.message || "Video OCR failed" });
   }
 });
 
-/* FILE CONVERT */
+/* FILE CONVERT
+   - Convert arbitrary text (sent in body) to requested format.
+   - Body: { text: "...", format: "pdf" }
+*/
 router.post("/convert", async (req, res) => {
   try {
-    const { text, format } = req.body;
-    const filePath = await convertFile(text, format);
-    
-res.json({
-  success: true,
-  download: "/api/ocr/download/" + path.basename(filePath)
-});
+    const { text, format } = req.body || {};
+    if (!text || !format) return res.status(400).json({ success: false, error: "Missing text or format" });
 
+    const filePath = await convertFile(text, format);
+    res.json({
+      success: true,
+      download: "/api/ocr/download/" + path.basename(filePath)
+    });
   } catch (err) {
     console.error(err);
-    res.json({ success: false });
+    res.status(500).json({ success: false, error: err.message || "Conversion failed" });
   }
 });
 
-// add route to download converted files
+/* DOWNLOAD converted files */
 router.get("/download/:filename", (req, res) => {
-  const filePath = path.join(__dirname, "..", "uploads", req.params.filename);
+  try {
+    const filename = req.params.filename;
+    if (!filename) return res.status(400).send("Missing filename");
 
-  res.download(filePath); // 🔥 FORCE DOWNLOAD
+    const filePath = path.join(__dirname, "..", "uploads", filename);
+    if (!fs.existsSync(filePath)) return res.status(404).json({ success: false, error: "File not found" });
+
+    res.download(filePath);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, error: err.message || "Download failed" });
+  }
 });
 
-
 module.exports = router;
+
+

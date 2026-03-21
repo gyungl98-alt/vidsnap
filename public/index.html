@@ -12,23 +12,28 @@
 
     <input type="file" id="file" accept="image/*,video/*" />
 
-    <button onclick="upload()">Extract Text</button>
+    <div style="display:flex; gap:8px; margin-top:12px;">
+      <select id="format" title="Choose output format">
+        <option value="">— No auto-convert —</option>
+        <option value="pdf">PDF</option>
+        <option value="docx">DOCX</option>
+        <option value="txt">TXT</option>
+        <option value="rtf">RTF</option>
+        <option value="xlsx">XLSX</option>
+      </select>
+
+      <button id="extractBtn">Extract Text</button>
+    </div>
 
     <div id="result" class="hidden">
       <h3>OCR Result</h3>
 
       <pre id="output"></pre>
 
-      <select id="format">
-        <option value="pdf">PDF</option>
-        <option value="docx">DOCX</option>
-        <option value="txt">TXT</option>
-        <option value="rtf">RTF</option>
-        <option value="xlsx">XLSX</option>
-        
-      </select>
-
-      <button onclick="downloadFile()">Download</button>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button id="convertBtn">Convert & Download</button>
+        <a id="downloadLink" class="hidden" href="#" download>Download file</a>
+      </div>
     </div>
 
     <p id="status"></p>
@@ -37,3 +42,4 @@
   <script src="/app.js"></script>
 </body>
 </html>
+
