@@ -69,7 +69,7 @@ function parseToBlocks(rawText) {
 /* ---------------- Exporters ---------------- */
 
 function ensureUploads() {
-  const dir = path.join(__dirname, "uploads");
+  const dir = path.join(__dirname, "..", "uploads");
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   return dir;
 }
@@ -159,29 +159,29 @@ async function exportToXlsx(struct, outPath) {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("OCR");
 
-  let rowIndex = 1;
+  // Header
+  ws.addRow(['Emoji', 'Text']);
+  ws.getRow(1).font = { bold: true };
+
+  let rowIndex = 2;
   for (const b of struct.blocks) {
+    let emoji = '';
+    let text = '';
     if (b.type === "heading") {
-      ws.getCell(`A${rowIndex}`).value = b.text;
-      ws.getRow(rowIndex).font = { bold: true };
-      rowIndex++;
+      emoji = '📌';
+      text = b.text;
     } else if (b.type === "paragraph") {
-      ws.getCell(`A${rowIndex}`).value = b.text;
-      rowIndex++;
+      emoji = '📄';
+      text = b.text;
     } else if (b.type === "list") {
-      b.items.forEach(it => {
-        ws.getCell(`A${rowIndex}`).value = it;
-        rowIndex++;
-      });
+      emoji = '📋';
+      text = b.items.join('\n');
     } else if (b.type === "table") {
-      b.rows.forEach(r => {
-        r.forEach((c, j) => {
-          ws.getCell(rowIndex, j + 1).value = c;
-        });
-        rowIndex++;
-      });
+      emoji = '📊';
+      text = b.rows.map(r => r.join(' | ')).join('\n');
     }
-    rowIndex++; // blank row
+    ws.addRow([emoji, text]);
+    rowIndex++;
   }
 
   await wb.xlsx.writeFile(outPath);
@@ -221,7 +221,7 @@ module.exports = async function convert(text, format) {
   ensureUploads();
   const timestamp = Date.now();
   const ext = format.toLowerCase();
-  const filePath = path.join(__dirname, "uploads", `result-${timestamp}.${ext}`);
+  const filePath = path.join(__dirname, "..", "uploads", `result-${timestamp}.${ext}`);
 
   // Build structured model
   const struct = parseToBlocks(text);

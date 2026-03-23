@@ -9,6 +9,7 @@ const fs = require("fs");
 const imageOcr = require("../services/imageOcr");
 const videoOcr = require("../services/videoOcr");
 const convertFile = require("../services/fileConverter");
+const usageLimiter = require("../middleware/usageLimiter");
 
 /* upload config */
 const storage = multer.diskStorage({
@@ -35,7 +36,7 @@ function normalizeOcrResult(ocrResult) {
 /* IMAGE OCR
    - If client sends `format` in body (e.g., { format: "pdf" }), route will convert OCR output and return download link.
 */
-router.post("/image", upload.single("file"), async (req, res) => {
+router.post("/image", usageLimiter.checkLimit("image"), upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
 
@@ -63,7 +64,7 @@ router.post("/image", upload.single("file"), async (req, res) => {
 /* VIDEO OCR
    - Same behavior as image endpoint: returns text, or converts if `format` provided.
 */
-router.post("/video", upload.single("file"), async (req, res) => {
+router.post("/video", usageLimiter.checkLimit("video"), upload.single("file"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, error: "No file uploaded" });
 
