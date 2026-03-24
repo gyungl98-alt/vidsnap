@@ -90,6 +90,14 @@ async function upload() {
         infoHtml += "<br>";
       }
 
+      if (data.bestFormat) {
+        infoHtml += `<strong>✅ Suggested Export:</strong> ${data.bestFormat.toUpperCase()}<br>`;
+        const formatSelect = document.getElementById("format");
+        if (formatSelect) {
+          formatSelect.value = data.bestFormat;
+        }
+      }
+
       infoHtml += "</div>";
       infoDiv.innerHTML = infoHtml;
       infoDiv.classList.remove("hidden");

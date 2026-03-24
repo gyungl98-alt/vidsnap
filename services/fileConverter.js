@@ -41,20 +41,24 @@ function parseToBlocks(rawText) {
       continue;
     }
 
-    // Table detection: multiple columns with consistent structure
+    // Table detection: multiple columns with tabs/spaces or comma-separated values
     const cols = line.split(/\t| {2,}/).map(c => c.trim()).filter(Boolean);
-    if (cols.length >= 2 && cols.length <= 10) {
+    const commaCols = line.split(",").map(c => c.trim()).filter(Boolean);
+    const canBeCommaTable = commaCols.length >= 2 && commaCols.length <= 20 && line.includes(",");
+    const useCommaTable = canBeCommaTable && commaCols.every(c => c.length > 0);
+
+    if ((cols.length >= 2 && cols.length <= 10) || useCommaTable) {
       const rows = [];
       const startIdx = i;
-      const firstColCount = cols.length;
+      const firstColCount = useCommaTable ? commaCols.length : cols.length;
+      const splitter = useCommaTable ? "," : /\t| {2,}/;
 
       while (i < lines.length && lines[i]) {
         const rowCols = lines[i]
-          .split(/\t| {2,}/)
+          .split(splitter)
           .map(c => c.trim())
           .filter(Boolean);
-        
-        // Accept if column count is similar (within 1 column variance for sparse data)
+
         if (rowCols.length >= 2 && Math.abs(rowCols.length - firstColCount) <= 1) {
           rows.push(rowCols);
           i++;
@@ -63,12 +67,32 @@ function parseToBlocks(rawText) {
         }
       }
 
-      if (rows.length >= 2) {
+      if (rows.length >= 1) {
         blocks.push({ type: "table", rows });
         continue;
       } else {
         i = startIdx + 1;
       }
+    }
+
+    // Row-list (vertical values) detection, make one-column table
+    const candidateRows = [];
+    let rowCursor = i;
+    while (rowCursor < lines.length) {
+      const item = lines[rowCursor].trim();
+      if (!item) break;
+      if (/^(\-|\u2022|\*|•|→|\d+[\.\)]|[a-z]\))/i.test(item)) break;
+      if (item.includes("\t") || item.split(/\s{2,}/).length > 1 || item.includes(",")) break;
+      if (item.length > 120) break;
+
+      candidateRows.push([item]);
+      rowCursor++;
+    }
+
+    if (candidateRows.length >= 3) {
+      blocks.push({ type: "table", rows: candidateRows });
+      i = rowCursor;
+      continue;
     }
 
     // Heading heuristic: short, uppercase/title-case, no punctuation clutter
@@ -218,51 +242,102 @@ async function exportToXlsx(struct, outPath) {
       currentRow++;
     } else if (b.type === "list") {
       const ws = wb.getWorksheet("OCR") || wb.addWorksheet("OCR");
-      b.items.forEach((item, idx) => {
-        const prefix = b.ordered ? `${idx + 1}. ` : "• ";
-        const row = ws.addRow([prefix + item]);
-        row.alignment = { wrapText: true };
-      });
-      currentRow += b.items.length;
+      // If list is row-style (single line values), add as columns in one row
+      if (b.items.length === 1 && b.items[0].includes(",")) {
+        const values = b.items[0].split(",").map(v => v.trim()).filter(Boolean);
+        const row = ws.addRow(values);
+        row.alignment = { wrapText: true, vertical: "top" };
+        currentRow += 1;
+      } else {
+        // Otherwise add each list item as own row (one-column list table)
+        b.items.forEach(item => {
+          const row = ws.addRow([item]);
+          row.alignment = { wrapText: true, vertical: "top" };
+        });
+        currentRow += b.items.length;
+      }
     } else if (b.type === "table") {
       // Create dedicated worksheet for each table
       const tableWs = wb.addWorksheet(`Table-${currentRow}`);
-      
-      // Add header row if present
+
       if (b.rows.length > 0) {
         const headerRow = tableWs.addRow(b.rows[0]);
-        headerRow.font = { bold: true };
-        headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
         headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4472C4" } };
 
         // Add data rows
-        for (let i = 1; i < b.rows.length; i++) {
-          const dataRow = tableWs.addRow(b.rows[i]);
+        const dataRows = b.rows.slice(1);
+        for (let i = 0; i < dataRows.length; i++) {
+          const dataRow = tableWs.addRow(dataRows[i]);
           dataRow.alignment = { wrapText: true, vertical: "top" };
-          if (i % 2 === 0) {
+          if (i % 2 === 1) {
             dataRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF2F2F2" } };
           }
         }
 
+        // Add basic validations for each table column
+        if (dataRows.length > 0) {
+          for (let colIdx = 0; colIdx < b.rows[0].length; colIdx++) {
+            const values = dataRows
+              .map(row => (row[colIdx] || "").trim())
+              .filter(v => v !== "");
+            const unique = [...new Set(values)];
+            const isNumeric = values.length > 0 && values.every(v => /^-?\d+(\.\d+)?$/.test(v));
+            const isDateish = values.length > 0 && values.every(v => !isNaN(Date.parse(v)));
+            const colLetter = String.fromCharCode(65 + colIdx);
+            const startRow = 2;
+            const endRow = dataRows.length + 1;
+
+            if (isNumeric) {
+              for (let r = startRow; r <= endRow; r++) {
+                const cell = tableWs.getCell(`${colLetter}${r}`);
+                cell.numFmt = "0.00";
+              }
+            }
+
+            if (isDateish) {
+              for (let r = startRow; r <= endRow; r++) {
+                const cell = tableWs.getCell(`${colLetter}${r}`);
+                cell.numFmt = "mm/dd/yyyy";
+              }
+            }
+
+            if (unique.length > 1 && unique.length <= 20) {
+              for (let r = startRow; r <= endRow; r++) {
+                tableWs.getCell(`${colLetter}${r}`).dataValidation = {
+                  type: "list",
+                  allowBlank: true,
+                  formulae: [`"${unique.join(",")}"`]
+                };
+              }
+            }
+          }
+        }
+
         // Auto-fit columns
-        tableWs.columns.forEach(col => {
-          let maxLength = 15;
-          col.eachCell?.({ includeEmpty: true }, (cell) => {
-            const cellLength = (cell.value || "").toString().length;
-            if (cellLength > maxLength) maxLength = cellLength;
+        if (Array.isArray(tableWs.columns)) {
+          tableWs.columns.forEach(col => {
+            let maxLength = 15;
+            col.eachCell({ includeEmpty: true }, (cell) => {
+              const cellLength = (cell.value || "").toString().length;
+              if (cellLength > maxLength) maxLength = cellLength;
+            });
+            col.width = Math.min(maxLength + 2, 50);
           });
-          col.width = Math.min(maxLength + 2, 50);
-        });
+        }
       }
+
       currentRow += b.rows.length + 2;
     }
   }
 
   // Default sheet
   const ws = wb.getWorksheet("OCR") || wb.addWorksheet("OCR");
-  ws.columns.forEach(col => {
-    col.width = 50;
-  });
+  if (Array.isArray(ws.columns)) {
+    ws.columns.forEach(col => {
+      col.width = 50;
+    });
+  }
 
   await wb.xlsx.writeFile(outPath);
 }

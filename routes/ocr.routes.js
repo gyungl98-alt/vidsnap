@@ -118,7 +118,8 @@ router.post("/image/enhanced", usageLimiter.checkLimit("image"), upload.single("
       structure,
       languages,
       metadata,
-      confidence: ocrRaw.confidence
+      confidence: ocrRaw.confidence,
+      bestFormat: ocrRaw.bestFormat || "xlsx"
     });
   } catch (err) {
     console.error(err);

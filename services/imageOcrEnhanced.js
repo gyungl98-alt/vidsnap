@@ -165,12 +165,15 @@ module.exports = async function imageOcrEnhanced(
       } catch {}
     }
 
+    const bestFormat = determineBestFormat(structure);
+
     return {
       rawText,
       languages,
       confidence,
       structure,
       lines,
+      bestFormat,
       metadata: {
         wasPreprocessed,
         detectedLang
@@ -221,15 +224,21 @@ function parseStructuredText(rawText) {
       continue;
     }
 
-    // Check for table (multiple columns separated by tabs/multiple spaces)
+    // Check for table (multiple columns separated by tabs/spaces or comma-separated)
     const cols = line.split(/\t| {2,}/).map(c => c.trim()).filter(Boolean);
-    if (cols.length >= 2 && cols.length <= 10) {
+    const commaCols = line.split(",").map(c => c.trim()).filter(Boolean);
+    const canBeCommaTable = commaCols.length >= 2 && commaCols.length <= 20 && line.includes(",");
+    const useCommaTable = canBeCommaTable && commaCols.every(c => c.length > 0);
+
+    if ((cols.length >= 2 && cols.length <= 10) || useCommaTable) {
       const rows = [];
       const startIdx = i;
+      const firstColCount = useCommaTable ? commaCols.length : cols.length;
+      const splitter = useCommaTable ? "," : /\t| {2,}/;
 
       while (i < lines.length && lines[i]) {
-        const rowCols = lines[i].split(/\t| {2,}/).map(c => c.trim()).filter(Boolean);
-        if (rowCols.length >= 2 && rowCols.length <= cols.length + 1) {
+        const rowCols = lines[i].split(splitter).map(c => c.trim()).filter(Boolean);
+        if (rowCols.length >= 2 && Math.abs(rowCols.length - firstColCount) <= 1) {
           rows.push(rowCols);
           i++;
         } else {
@@ -237,12 +246,31 @@ function parseStructuredText(rawText) {
         }
       }
 
-      if (rows.length >= 2) {
+      if (rows.length >= 1) {
         blocks.push({ type: "table", rows });
         continue;
       } else {
         i = startIdx + 1; // Reset if not enough rows
       }
+    }
+
+    // Row-list (vertical values) detection: convert 3+ lines of sequential simple values into one-column table
+    const candidateRows = [];
+    let cursor = i;
+    while (cursor < lines.length) {
+      const next = lines[cursor].trim();
+      if (!next) break;
+      if (/^(\-|\u2022|\*|•|→|\d+[\.\)]|[a-z]\))/i.test(next)) break;
+      if (next.includes("\t") || next.split(/\s{2,}/).length > 1 || next.includes(",")) break;
+      if (next.length > 120) break;
+      candidateRows.push([next]);
+      cursor++;
+    }
+
+    if (candidateRows.length >= 3) {
+      blocks.push({ type: "table", rows: candidateRows });
+      i = cursor;
+      continue;
     }
 
     // Check for heading (short line, mostly uppercase, no punctuation clutter)
@@ -283,4 +311,17 @@ function parseStructuredText(rawText) {
   }
 
   return { blocks };
+}
+
+function determineBestFormat(structure) {
+  if (!structure || !Array.isArray(structure.blocks)) return "txt";
+  const hasTable = structure.blocks.some(b => b.type === "table");
+  const hasList = structure.blocks.some(b => b.type === "list");
+  const hasParagraph = structure.blocks.some(b => b.type === "paragraph");
+
+  if (hasTable) return "xlsx";
+  if (hasList && !hasParagraph) return "xlsx";
+  if (hasParagraph && hasList) return "docx";
+  if (hasParagraph) return "pdf";
+  return "txt";
 }
