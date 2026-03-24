@@ -161,7 +161,6 @@ function exportToTxt(struct, outPath) {
 
 /** DOCX exporter */
 async function exportToDocx(struct, outPath) {
-  const doc = new Document();
   const children = [];
 
   for (const b of struct.blocks) {
@@ -182,7 +181,18 @@ async function exportToDocx(struct, outPath) {
     }
   }
 
-  doc.addSection({ children });
+  const doc = new Document({
+    creator: "VidSnap OCR",
+    description: "OCR extracted document",
+    title: "OCR output",
+    subject: "OCR conversion",
+    keywords: "OCR, conversion",
+    sections: [{
+      properties: {},
+      children
+    }]
+  });
+
   const buffer = await Packer.toBuffer(doc);
   fs.writeFileSync(outPath, buffer);
 }
