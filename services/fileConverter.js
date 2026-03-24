@@ -181,21 +181,28 @@ async function exportToDocx(struct, outPath) {
     }
   }
 
-  const doc = new Document({
-    creator: "VidSnap OCR",
-    description: "OCR extracted document",
-    title: "OCR output",
-    subject: "OCR conversion",
-    keywords: "OCR, conversion",
-    sections: [{
-      properties: {},
-      children
-    }]
-  });
+  try {
+    const doc = new Document({
+      creator: "VidSnap OCR",
+      description: "OCR extracted document",
+      title: "OCR output",
+      subject: "OCR conversion",
+      keywords: "OCR, conversion",
+      sections: [{
+        properties: {},
+        children
+      }]
+    });
 
-  const buffer = await Packer.toBuffer(doc);
-  fs.writeFileSync(outPath, buffer);
+    const buffer = await Packer.toBuffer(doc);
+    fs.writeFileSync(outPath, buffer);
+  } catch (err) {
+    console.error("exportToDocx failed, falling back to TXT:", err);
+    exportToTxt(struct, outPath.replace(/\.docx$/i, ".txt"));
+    return outPath.replace(/\.docx$/i, ".txt");
+  }
 }
+
 
 /** PDF exporter (pdfkit) */
 function exportToPdf(struct, outPath) {
@@ -403,7 +410,10 @@ module.exports = async function convert(text, format) {
   } else if (ext === "pdf") {
     exportToPdf(struct, filePath);
   } else if (ext === "docx") {
-    await exportToDocx(struct, filePath);
+    const resultPath = await exportToDocx(struct, filePath);
+    if (typeof resultPath === "string" && resultPath !== filePath) {
+      return resultPath;
+    }
   } else if (ext === "rtf") {
     exportToRtf(struct, filePath);
   } else if (ext === "xlsx" || ext === "xls") {
