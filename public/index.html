@@ -2,37 +2,42 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>VidSnap OCR</title>
+  <title>VidSnap OCR - Advanced Text Extraction</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <div class="card">
-    <h2>VidSnap OCR</h2>
+    <h2>🔍 VidSnap OCR - Advanced AI Text Extraction</h2>
+    <p style="font-size: 12px; color: #666; margin: 5px 0 15px 0;">
+      Auto language detection • Image preprocessing • Table detection • Multi-format export
+    </p>
 
-    <input type="file" id="file" accept="image/*,video/*" />
+    <input type="file" id="file" accept="image/*,video/*" title="Select image or video file" />
 
     <div style="display:flex; gap:8px; margin-top:12px;">
       <select id="format" title="Choose output format">
         <option value="">— No auto-convert —</option>
-        <option value="pdf">PDF</option>
-        <option value="docx">DOCX</option>
-        <option value="txt">TXT</option>
-        <option value="rtf">RTF</option>
-        <option value="xlsx">XLSX</option>
+        <option value="txt">📄 TXT (Plain Text)</option>
+        <option value="pdf">📕 PDF</option>
+        <option value="docx">📗 DOCX (Word)</option>
+        <option value="xlsx">📊 XLSX (Excel)</option>
+        <option value="rtf">📙 RTF</option>
       </select>
 
-      <button id="extractBtn">Extract Text</button>
+      <button id="extractBtn" style="flex: 1;">Extract Text</button>
     </div>
 
     <div id="result" class="hidden">
-      <h3>OCR Result</h3>
+      <h3>✅ OCR Result</h3>
+
+      <div id="ocrInfo" class="hidden"></div>
 
       <pre id="output"></pre>
 
       <div style="display:flex; gap:8px; margin-top:8px;">
-        <button id="convertBtn">Convert & Download</button>
-        <a id="downloadLink" class="hidden" href="#" download>Download file</a>
+        <button id="convertBtn">📥 Convert & Download</button>
+        <a id="downloadLink" class="hidden" href="#" download>📥 Download file</a>
       </div>
     </div>
 

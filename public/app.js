@@ -1,6 +1,7 @@
 
 let extractedText = "";
 let lastDownloadUrl = "";
+let lastOcrData = null;
 
 async function upload() {
   const fileInput = document.getElementById("file");
@@ -8,6 +9,7 @@ async function upload() {
   const output = document.getElementById("output");
   const resultBox = document.getElementById("result");
   const formatSelect = document.getElementById("format");
+  const infoDiv = document.getElementById("ocrInfo");
 
   const file = fileInput.files[0];
   if (!file) {
@@ -24,14 +26,18 @@ async function upload() {
 
   const type = file.type.startsWith("video") ? "video" : "image";
 
-  status.innerText = "⏳ Extracting text...";
+  status.innerText = "⏳ Extracting text with AI preprocessing...";
   resultBox.classList.add("hidden");
   extractedText = "";
   lastDownloadUrl = "";
+  lastOcrData = null;
   document.getElementById("downloadLink").classList.add("hidden");
 
   try {
-    const res = await fetch(`/api/ocr/${type}`, {
+    // Use enhanced endpoint for images
+    const endpoint = type === "image" ? "/api/ocr/image/enhanced" : `/api/ocr/${type}`;
+    
+    const res = await fetch(endpoint, {
       method: "POST",
       body: formData
     });
@@ -44,19 +50,58 @@ async function upload() {
       return;
     }
 
+    // Store OCR data for later use
+    lastOcrData = data;
+
     // Prefer rawText if returned as object, otherwise fallback to text
     const text = data.rawText || data.text || (data.lines ? data.lines.join("\n") : "");
     extractedText = text || "";
 
     output.innerText = extractedText || "(no text detected)";
 
+    // Display additional OCR information
+    if (infoDiv) {
+      let infoHtml = "<div style='margin-top: 12px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 12px; color: #333;'>";
+      
+      if (data.languages) {
+        infoHtml += `<strong>🌐 Detected Languages:</strong> ${data.languages.join(", ")}<br>`;
+      }
+      
+      if (data.metadata?.wasPreprocessed) {
+        infoHtml += `<strong>🔧 Image Preprocessing:</strong> Applied (blur reduction, contrast enhancement)<br>`;
+      }
+      
+      if (data.confidence !== null && data.confidence !== undefined) {
+        infoHtml += `<strong>✓ Confidence:</strong> ${Math.round(data.confidence)}%<br>`;
+      }
+
+      if (data.structure?.blocks) {
+        const blockTypes = {};
+        data.structure.blocks.forEach(block => {
+          blockTypes[block.type] = (blockTypes[block.type] || 0) + 1;
+        });
+        infoHtml += `<strong>📊 Detected Structure:</strong>`;
+        infoHtml += Object.entries(blockTypes)
+          .map(([type, count]) => {
+            const icons = { heading: "📌", paragraph: "📄", list: "📋", table: "📊" };
+            return `${icons[type] || ""} ${count} ${type}`;
+          })
+          .join(", ");
+        infoHtml += "<br>";
+      }
+
+      infoHtml += "</div>";
+      infoDiv.innerHTML = infoHtml;
+      infoDiv.classList.remove("hidden");
+    }
+
     // If server returned a download link (auto-convert), show it
     if (data.download) {
       lastDownloadUrl = data.download;
       showDownloadLink(data.download);
-      status.innerText = "✅ Text extracted and file ready";
+      status.innerText = "✅ Text extracted with AI enhancement and file ready!";
     } else {
-      status.innerText = "✅ Text extracted";
+      status.innerText = "✅ Text extracted with AI enhancement";
     }
 
     resultBox.classList.remove("hidden");
@@ -80,7 +125,7 @@ async function downloadFile() {
     return;
   }
 
-  status.innerText = "⏳ Preparing file...";
+  status.innerText = "⏳ Preparing file with best formatting...";
 
   try {
     const res = await fetch("/api/ocr/convert", {
@@ -90,7 +135,8 @@ async function downloadFile() {
       },
       body: JSON.stringify({
         text: extractedText,
-        format: format
+        format: format,
+        structure: lastOcrData?.structure || null
       })
     });
 
@@ -105,7 +151,8 @@ async function downloadFile() {
     // Show download link and trigger browser navigation to start download
     lastDownloadUrl = data.download;
     showDownloadLink(data.download);
-    // Use a short delay to ensure link is visible before triggering
+    
+    // Auto-download
     setTimeout(() => {
       window.location.href = data.download;
       status.innerText = "✅ Download started";
@@ -123,9 +170,9 @@ function showDownloadLink(url) {
   try {
     const name = url.split("/").pop();
     link.setAttribute("download", name);
-    link.innerText = "Download file";
+    link.innerText = "📥 Download file";
   } catch (e) {
-    link.innerText = "Download file";
+    link.innerText = "📥 Download file";
   }
   link.classList.remove("hidden");
 }
