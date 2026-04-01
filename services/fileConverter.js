@@ -384,6 +384,19 @@ function exportToRtf(struct, outPath) {
   fs.writeFileSync(outPath, rtf.join("\n"));
 }
 
+/** JSON exporter: structured data */
+function exportToJson(struct, outPath) {
+  const jsonData = {
+    metadata: {
+      exportedAt: new Date().toISOString(),
+      tool: "VidSnap OCR",
+      version: "1.0"
+    },
+    content: struct.blocks
+  };
+  fs.writeFileSync(outPath, JSON.stringify(jsonData, null, 2));
+}
+
 /**
  * Main convert function
  * text: raw OCR text
@@ -418,6 +431,8 @@ module.exports = async function convert(text, format) {
     exportToRtf(struct, filePath);
   } else if (ext === "xlsx" || ext === "xls") {
     await exportToXlsx(struct, filePath);
+  } else if (ext === "json") {
+    exportToJson(struct, filePath);
   } else {
     // fallback: plain text
     fs.writeFileSync(filePath, text);

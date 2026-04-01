@@ -21,6 +21,29 @@ h2 {
   margin: 0 0 12px 0;
 }
 
+h3 {
+  margin-top: 20px;
+  color: #333;
+}
+
+h4 {
+  margin-top: 15px;
+  color: #555;
+}
+
+ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+ul ul {
+  margin: 5px 0;
+}
+
+li {
+  margin: 5px 0;
+}
+
 input, select, button {
   width: 100%;
   margin-top: 12px;
