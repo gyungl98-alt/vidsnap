@@ -103,6 +103,16 @@ module.exports = async function imageOcrEnhanced(
   const logger = options.logger || (() => {});
 
   try {
+    // Validate image file exists and is readable
+    if (!fs.existsSync(imagePath)) {
+      throw new Error(`Image file not found: ${imagePath}`);
+    }
+
+    const stats = fs.statSync(imagePath);
+    if (stats.size === 0) {
+      throw new Error(`Image file is empty: ${imagePath}`);
+    }
+
     // Step 1: Try preprocessing if enabled
     let processedPath = imagePath;
     let wasPreprocessed = false;
@@ -131,9 +141,20 @@ module.exports = async function imageOcrEnhanced(
 
     logger({ status: "ocr", message: `Running OCR with languages: ${languages.join(", ")}` });
 
-    const { data } = await Tesseract.recognize(processedPath, languages.join("+"), {
-      logger: options.logger || (() => {})
-    });
+    let data;
+    try {
+      const result = await Tesseract.recognize(processedPath, languages.join("+"), {
+        logger: options.logger || (() => {})
+      });
+      data = result.data;
+    } catch (ocrError) {
+      logger({ status: "ocr_fallback", message: "Enhanced OCR failed, trying basic OCR..." });
+      // Fallback to basic OCR
+      const fallbackResult = await Tesseract.recognize(processedPath, "eng", {
+        logger: () => {}
+      });
+      data = fallbackResult.data;
+    }
 
     // Step 4: Parse raw text
     const rawText = (data && data.text) ? data.text : "";
@@ -154,9 +175,28 @@ module.exports = async function imageOcrEnhanced(
       })
       .filter(l => l && l.trim());
 
-    // Step 7: Confidence
-    const confidence =
-      data && typeof data.confidence === "number" ? data.confidence : null;
+    // Step 7: Improved confidence calculation
+    let confidence = null;
+    if (data && typeof data.confidence === "number") {
+      confidence = data.confidence;
+    } else if (data && data.words && Array.isArray(data.words)) {
+      const validWords = data.words.filter(w => w && w.confidence !== null && w.confidence !== undefined);
+      if (validWords.length > 0) {
+        confidence = validWords.reduce((sum, w) => sum + w.confidence, 0) / validWords.length;
+      }
+    }
+
+    // Adjust confidence based on text quality
+    if (confidence !== null) {
+      // Penalize very short text (likely poor OCR)
+      if (rawText.trim().length < 10) {
+        confidence = Math.max(0, confidence - 30);
+      }
+      // Boost confidence for structured content
+      if (structure.blocks.length > 1) {
+        confidence = Math.min(100, confidence + 10);
+      }
+    }
 
     // Cleanup preprocessed file if created
     if (wasPreprocessed && processedPath !== imagePath) {

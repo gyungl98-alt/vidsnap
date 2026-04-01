@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About - VidSnap OCR</title>
   <link rel="stylesheet" href="style.css" />
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2850229497443585"
@@ -15,55 +16,88 @@
     <p>Developed as an open-source/learning project to help creators, students, and businesses automate document extraction workflows.</p>
 
     <h3>Supported Document Types & OCR Tips</h3>
-    <p>VidSnap can effectively extract text from various types of documents and media. Here's a preview of what works best:</p>
+    <p>VidSnap can effectively extract text from various types of documents and media. Here's a comprehensive guide to get the best results:</p>
     
-    <h4>📸 Images</h4>
+    <h4>📸 Images - Best for Static Documents</h4>
+    <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 10px 0;">
+      <p><strong>Supported Formats:</strong> JPEG, PNG, BMP, TIFF, GIF, WebP</p>
+      <p><strong>Perfect for:</strong> Scanned documents, photos of text, screenshots, receipts, invoices, ID cards, business cards, handwritten notes, forms, certificates</p>
+      <p><strong>Pro Tips for Best OCR Results:</strong></p>
+      <ul>
+        <li>📏 <strong>Resolution:</strong> Use images at least 300 DPI (dots per inch) for crisp text</li>
+        <li>💡 <strong>Lighting:</strong> Ensure even, bright lighting without harsh shadows</li>
+        <li>📐 <strong>Alignment:</strong> Keep text straight and properly oriented (not tilted)</li>
+        <li>🎨 <strong>Contrast:</strong> High contrast between text and background</li>
+        <li>🚫 <strong>Avoid:</strong> Blurry images, curved pages, wrinkled paper, watermarks, or busy backgrounds</li>
+        <li>📱 <strong>Mobile Photos:</strong> Hold camera steady, use flash in low light, avoid zoom</li>
+      </ul>
+    </div>
+
+    <h4>🎥 Videos - Best for Dynamic Content</h4>
+    <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin: 10px 0;">
+      <p><strong>Supported Formats:</strong> MP4, AVI, MOV, MKV, WMV, FLV, WebM, 3GP</p>
+      <p><strong>Perfect for:</strong> Lecture recordings, presentations, tutorials, documentaries, news clips, educational videos, training materials, subtitles, on-screen text</p>
+      <p><strong>Pro Tips for Best OCR Results:</strong></p>
+      <ul>
+        <li>🎬 <strong>Video Quality:</strong> HD resolution (1080p or higher) for better text clarity</li>
+        <li>📝 <strong>Text Size:</strong> Ensure text is large and readable on screen</li>
+        <li>🎭 <strong>Text Style:</strong> Clear, sans-serif fonts work best (avoid decorative fonts)</li>
+        <li>⚡ <strong>Playback Speed:</strong> Normal speed videos extract better than fast-forward</li>
+        <li>📊 <strong>Frame Rate:</strong> 24-30 FPS videos provide optimal frame sampling</li>
+        <li>🚫 <strong>Avoid:</strong> Fast-moving text, shaky camera, low resolution, compressed videos</li>
+      </ul>
+    </div>
+
+    <h4>📄 Scanned Documents - Best for Professional Content</h4>
+    <div style="background: #fffacd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+      <p><strong>Document Types:</strong> PDFs, Word documents, scanned papers, forms, contracts, reports, books, magazines</p>
+      <p><strong>Perfect for:</strong> Business documents, legal papers, academic materials, technical manuals, newspapers, brochures</p>
+      <p><strong>Pro Tips for Best OCR Results:</strong></p>
+      <ul>
+        <li>🖨️ <strong>Scanner Settings:</strong> 300-600 DPI, grayscale or color mode</li>
+        <li>📏 <strong>Paper Size:</strong> Standard A4/Letter size documents</li>
+        <li>📐 <strong>Flat Scanning:</strong> No wrinkles, folds, or curved pages</li>
+        <li>🧹 <strong>Clean Source:</strong> Dust-free, no stains or marks on paper</li>
+        <li>📚 <strong>Book Scanning:</strong> Use book cradle or flatbed scanner for bound materials</li>
+        <li>🚫 <strong>Avoid:</strong> Yellowed paper, faded ink, glossy surfaces, double-sided scans</li>
+      </ul>
+    </div>
+
+    <h4>💻 Digital Screenshots - Best for UI/UX Content</h4>
+    <div style="background: #f0fff0; padding: 15px; border-radius: 8px; margin: 10px 0;">
+      <p><strong>Screen Types:</strong> Desktop screenshots, mobile app screens, website captures, software interfaces</p>
+      <p><strong>Perfect for:</strong> Error messages, UI text, code snippets, tutorials, documentation, chat logs</p>
+      <p><strong>Pro Tips for Best OCR Results:</strong></p>
+      <ul>
+        <li>🖥️ <strong>Resolution:</strong> Native screen resolution (avoid zoomed screenshots)</li>
+        <li>🔍 <strong>Zoom Level:</strong> 100% zoom for accurate text capture</li>
+        <li>🎨 <strong>Theme:</strong> Light backgrounds with dark text work best</li>
+        <li>📱 <strong>Mobile Screenshots:</strong> Use built-in screenshot tools, avoid cropped images</li>
+        <li>🚫 <strong>Avoid:</strong> Low-resolution images, angled screenshots, blurry captures</li>
+      </ul>
+    </div>
+
+    <h4>📝 Handwritten Notes - Limited Support</h4>
+    <div style="background: #ffe4e1; padding: 15px; border-radius: 8px; margin: 10px 0;">
+      <p><strong>Note Types:</strong> Clean handwritten text, printed handwriting, signatures</p>
+      <p><strong>Best Results:</strong> Clear, consistent handwriting with good spacing</p>
+      <p><strong>Limitations:</strong> Cursive writing, messy handwriting, or stylized scripts may not extract well</p>
+    </div>
+
+    <h4>🌐 Language Support</h4>
+    <p><strong>Primary Languages:</strong> English, Hindi, Arabic, Chinese (Simplified/Traditional), Bengali, Tamil, Telugu, Kannada, Malayalam, Odia</p>
+    <p><strong>Auto-Detection:</strong> VidSnap automatically detects the primary language in your content</p>
+    <p><strong>Mixed Languages:</strong> Documents with multiple languages are supported</p>
+
+    <h4>⚡ Performance Tips</h4>
     <ul>
-      <li><strong>Formats:</strong> JPEG, PNG, BMP, TIFF, GIF</li>
-      <li><strong>Best for:</strong> Scanned documents, photos of text, screenshots, receipts, invoices, ID cards</li>
-      <li><strong>Tips for better OCR:</strong>
-        <ul>
-          <li>Use high-resolution images (at least 300 DPI)</li>
-          <li>Ensure good lighting and contrast</li>
-          <li>Keep text straight and aligned</li>
-          <li>Avoid blurry or distorted images</li>
-          <li>Remove shadows or glare</li>
-        </ul>
-      </li>
+      <li><strong>File Size:</strong> Keep files under 50MB for faster processing</li>
+      <li><strong>Batch Processing:</strong> Process similar documents together for consistency</li>
+      <li><strong>Output Formats:</strong> Choose format based on your needs (PDF for preservation, DOCX for editing, XLSX for data)</li>
+      <li><strong>Quality Check:</strong> Always review OCR results, especially for critical documents</li>
     </ul>
 
-    <h4>🎥 Videos</h4>
-    <ul>
-      <li><strong>Formats:</strong> MP4, AVI, MOV, MKV, WMV, FLV</li>
-      <li><strong>Best for:</strong> Lecture recordings, presentations, documentaries, tutorials with on-screen text</li>
-      <li><strong>Tips for better OCR:</strong>
-        <ul>
-          <li>Use videos with clear, readable text overlays</li>
-          <li>Ensure stable camera and good lighting</li>
-          <li>Avoid fast-moving text or shaky footage</li>
-          <li>Text should be large and high-contrast</li>
-          <li>Minimize background noise or distractions</li>
-        </ul>
-      </li>
-    </ul>
-
-    <h4>📄 Documents</h4>
-    <ul>
-      <li><strong>Types:</strong> PDFs, Word documents (converted to images), handwritten notes (limited)</li>
-      <li><strong>Best for:</strong> Typed documents, forms, certificates, books</li>
-      <li><strong>Tips for better OCR:</strong>
-        <ul>
-          <li>Use clean, typed text rather than handwriting</li>
-          <li>Ensure text is not too small or stylized</li>
-          <li>Scan documents at high resolution</li>
-          <li>Straighten pages before scanning</li>
-          <li>Avoid wrinkled or damaged paper</li>
-        </ul>
-      </li>
-    </ul>
-
-    <p><strong>Note:</strong> VidSnap supports multiple languages including English, Hindi, and others. For best results, ensure your content matches these guidelines!</p>
-
+    <p><strong>💡 Pro Tip:</strong> For best results, combine multiple techniques - use high-quality scans with good lighting, clear fonts, and proper alignment. If you're unsure about a document type, try uploading a small sample first!</p>
     <p><a href="index.html">◀ Back to Home</a></p>
   </div>
 </body>

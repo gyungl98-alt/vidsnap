@@ -1,3 +1,12 @@
+/* CSS Reset for better compatibility and AdSense support */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
 body {
   font-family: Arial, sans-serif;
   background: #f4f6f8;
@@ -6,14 +15,18 @@ body {
   padding-top: 60px;
   overflow-y: auto;
   margin: 0;
+  min-height: 100vh;
+  line-height: 1.6;
 }
 
 .card {
   background: #fff;
   padding: 25px;
-  width: 420px;
+  width: 90%;
+  max-width: 600px;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
 }
 
 h2 {
@@ -83,6 +96,47 @@ pre {
   margin-top: 10px;
   text-align: center;
   font-size: 14px;
+}
+
+/* Mobile responsiveness and AdSense compatibility */
+@media (max-width: 768px) {
+  body {
+    padding-top: 20px;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .card {
+    width: 100%;
+    max-width: none;
+    padding: 15px;
+    margin: 0;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+  
+  h3 {
+    font-size: 1.3em;
+  }
+  
+  h4 {
+    font-size: 1.1em;
+  }
+  
+  input, select, button {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  pre {
+    font-size: 14px;
+    max-height: 150px;
+  }
+  
+  ul {
+    padding-left: 15px;
+  }
 }
 
 #downloadLink {

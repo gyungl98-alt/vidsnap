@@ -26,7 +26,9 @@ async function upload() {
 
   const type = file.type.startsWith("video") ? "video" : "image";
 
-  status.innerText = "⏳ Extracting text with AI preprocessing...";
+  status.innerText = type === "image" 
+    ? "🔍 Analyzing image and detecting language..." 
+    : "🎬 Processing video frames and extracting text...";
   resultBox.classList.add("hidden");
   extractedText = "";
   lastDownloadUrl = "";
@@ -45,7 +47,7 @@ async function upload() {
     const data = await res.json();
 
     if (!data || !data.success) {
-      status.innerText = "❌ OCR failed";
+      status.innerText = `❌ OCR failed: ${data?.error || "Unknown error"}`;
       console.error("OCR error response:", data);
       return;
     }
@@ -56,6 +58,8 @@ async function upload() {
     // Prefer rawText if returned as object, otherwise fallback to text
     const text = data.rawText || data.text || (data.lines ? data.lines.join("\n") : "");
     extractedText = text || "";
+
+    status.innerText = `✅ Text extracted successfully! (${extractedText.length} characters)`;
 
     output.innerText = extractedText || "(no text detected)";
 
